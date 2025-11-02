@@ -1,0 +1,62 @@
+```html
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<title>Discord Guilds Viewer</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 600px; margin: 30px auto; }
+  button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+  ul { list-style-type: none; padding-left: 0; }
+  li { padding: 5px 0; }
+</style>
+</head>
+<body>
+<h2>Discord Guilds Viewer</h2>
+<p>Klik op de knop hieronder om te zien in welke Discord-servers je zit.</p>
+<button id="login">Log in met Discord</button>
+<ul id="guilds"></ul>
+
+<script>
+  // --- Vul hier je gegevens in ---
+  const CLIENT_ID = "1434624180904530083";          // Vul je Discord App Client ID in
+  const REDIRECT_URI = "https://docs.google.com/document/d/1a-ov9ifQ4L_6gfpQvO4cqjK68f0elX9l4cTc5kc77rk/edit?tab=t.0"; // Vul hier je redirect URI in
+  const SCOPES = "identify guilds";           // Dit zorgt dat we servers mogen zien
+
+  // Functie: haal access token uit URL hash
+  function getTokenFromHash() {
+    const hash = window.location.hash.substring(1);
+    const params = new URLSearchParams(hash);
+    return params.get("access_token");
+  }
+
+  // Login knop
+  document.getElementById("login").onclick = () => {
+    const url = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&scope=${encodeURIComponent(SCOPES)}`;
+    window.location.href = url;
+  };
+
+  // Als er een token is, haal servers op
+  const token = getTokenFromHash();
+  if (token) {
+    fetch("https://discord.com/api/users/@me/guilds", {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    .then(res => res.json())
+    .then(guilds => {
+      const ul = document.getElementById("guilds");
+      ul.innerHTML = "";
+      guilds.forEach(g => {
+        const li = document.createElement("li");
+        li.textContent = `${g.name} (Owner: ${g.owner ? "ja" : "nee"})`;
+        ul.appendChild(li);
+      });
+    })
+    .catch(err => {
+      console.error(err);
+      alert("Er is iets misgegaan bij het ophalen van servers.");
+    });
+  }
+</script>
+</body>
+</html>
